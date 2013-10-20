@@ -1,83 +1,91 @@
-(*init a 0 de Pentree et b*)
-let entriesW =
-    ref (Array.make 2 (-0.15));;
+let b =
+    ref 0.
 
-!entriesW.(0) <- 0.05
+let a =
+    Random.float 1.
 
-let entriesX =
-    [|0;1;0;1;1|]
+let t =
+    1000
 
-let b = ref 0.
-
-let a = ref 0.3
-
-let t = 10000
-
-let vectorlearn =
-    let vectorLearn = Array.make 3 [|1|] in
-    vectorLearn.(0) <- [|0;1|];
-    vectorLearn.(1) <- [|1;0|];
-    (*vectorLearn.(2) <- [|1|];*)
-    vectorLearn
-
-let fs entriesX entriesW =
-    let r = ref 0. in
-    r := 0.;
-    for i = 0 to (*entries.length*)2 -1 do
-        for j = 0 to 1 do
-            r := !r +. float_of_int (entriesX.(i).(j)) *. entriesW.(j)
-        done;
+let verification entryTab pw =
+    let r = ref !b
+    in
+    r := !b;
+    for i = 0 to Array.length entryTab -1 do
+        r := !r +. float_of_int(entryTab.(i)) *. pw.(i)
     done;
-    r := !r +. !b;
     !r
 
-let learningLoop =
+let isintab reference tab =
+    let i = ref 0 in
+    i := 0;
+    while !i < Array.length reference -1 &&
+    (tab.(0),tab.(1)) <> reference.(!i) do
+        i := !i +1
+    done;
+    (tab.(0),tab.(1)) = reference.(!i)
+
+let learning reference pw xn =
     let y =
-        ref (fs vectorlearn !entriesW)
+        ref (verification xn pw)
     in
-    for i = 0 to t do      
-        (*let y =
-            ref (fs vectorlearn)
-        in*)
-        y := fs vectorlearn !entriesW;
-Printf.printf "\n%f " !y;
-
-        if !y >= 0.5 then
-            y := 1.;
-        if !y < 0.5 then
-            y := 0.;
-            Printf.printf "%f " !y;
-            if !y <> 1. then
-                begin
- Printf.printf "lol";
-
-                for j = 0 to (*entriesW.length*) 2 -1 do
-                    !entriesW.(j) <- !entriesW.(j) +. (*vectorlearn.(0) *.*) !a;
-                    Printf.printf "%f" !entriesW.(j);
-                    Printf.printf "coucou\n"
-                done;
-                b := !b +. !a
-                end
-    done
-
-    let _ =
-        learningLoop
-(*let learning t =
     for i = 0 to t do
-        let y fs vector = fs vector in 
-        y fs vectorlearn;
-        (*begin
-        if  (y >= 0.) then
-            y = 1.
+        y := verification xn pw;
+        Printf.printf "fs=%f  " !y;
+        Printf.printf "x1=%d " ((xn.(0)));
+        Printf.printf "x2=%d " ((xn.(1)));
+        if !y >= 0. then
+            y := 1.
         else
-            y = 0.
-            end*)
-            if (y <> t.(i)) then
+            begin
+                y := 0.
+            end;
+        Printf.printf " Q=%d  \n" (int_of_float(!y));
+        if (isintab reference xn) && !y <> 1. then
+            begin
+                for j = 0 to (Array.length pw) -1 do
+                pw.(j) <- pw.(j) +. float_of_int (xn.(j)) *. a
+                done;
+                b := !b +. a
+            end
+        else
+            if (not(isintab reference xn)) && !y <> 0. then
                 begin
-                    for j = 0 to entriesW.length -1 do
-                        entriesW.(j) := !entriesW.(j) +. float_of_int
-                        (entriesX.(j)) *. !a *. g;
+                    for j = 0 to (Array.length pw) -1 do
+                    pw.(j) <- pw.(j) -. float_of_int(xn.(j)) *. a
                     done;
-                    b := !b +. !a *. g
+                    b := !b -. a
                 end
-    done*)
+    done;
+int_of_float(!y)
+
+let complement x =
+    if x > 0 then
+        0
+    else
+        1
+
+let pw1 =
+    [|(Random.float 2.) -.1.; (Random.float 2.) -.1.|]
+let pw2 =
+    [|(Random.float 2.) -.1.; (Random.float 2.) -.1.|]
+let pw3 =
+    [|(Random.float 2.) -.1.; (Random.float 2.) -.1.|]
+
+
+let perceptron x1 x2 =
+    let nx1 = complement x1 in
+    let nx2 = complement x2 in
+    let a =
+        learning [|(1,1)|] pw1 [|nx1;x2|]
+    in
+    let b =
+        learning [|(1,1)|] pw2 [|x1;nx2|]
+    in
+    learning [|(1,0);(0,1)|] pw3 [|a;b|]
+
+let _ =
+    if Array.length (Sys.argv) < 2 then
+        failwith "Veuillez entrer deux arguments binaire.";
+    Printf.printf "%d\n" (perceptron (int_of_string(Sys.argv.(1)))
+        (int_of_string(Sys.argv.(2))))
