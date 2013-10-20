@@ -98,7 +98,7 @@ let backNoise src dst =
     get_dims src in
   for i = 2 to w-3 do
     for j = 2 to h-3 do
-      if areacolors src i j w h <= 255 *5  then
+      if areacolors src i j w h <= 255 *8  then
 	Sdlvideo.put_pixel_color dst i
           j(0,0,0)
       else
